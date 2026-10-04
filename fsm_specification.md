@@ -1,3 +1,4 @@
+```mermaid
 ---
 config:
   fontFamily: '''Inter Variable'', sans-serif'
