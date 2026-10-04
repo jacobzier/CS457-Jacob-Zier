@@ -32,8 +32,11 @@
 
 ### 2.1 Message Transport & Serialization Format
 - **Transport Protocol:** TCP
-- **Serialization Format:** [JSON / Fixed-Header Binary / Delimited Text]
-- **Framing Mechanism:** [e.g., Newline-delimited (`\n`) JSON payloads OR 4-byte big-endian length prefix]
+- **Serialization Format:** JSON
+- **Framing Mechanism:** Newline-delimited (`\n`)
+- **Example Back-to-Back Byte Stream:**
+    {"msg_type":"CONNECT","player_id":"Player_1","timestamp":1727000000}\n
+    {"msg_type":"MOVE","player_id":"Player_1","payload":{"row":0,"col":2},"timestamp":1727000005}\n'`
 
 ### 2.2 Message Schema Definitions
 
@@ -44,10 +47,38 @@
 4. `MOVE` (Client -> Server): Player action (e.g., cell coordinates or answer choice).
 5. `STATE_UPDATE` (Server -> Clients): Broadcast current game board / state and active player turn.
 6. `GAME_OVER` (Server -> Clients): Victory / Draw notification with final scores.
+8. `DISCONNECT` (Client -> Server): Client notifies server of intentional depature/quit
 7. `ERROR` (Server -> Client): Invalid move or malformed packet error.
 
-#### Example JSON Protocol Schema:
 ```json
+{
+  "msg_type": "CONNECT",
+  "player_id": "Player_1",
+  "timestamp": 1727000000
+}
+
+{
+  "msg_type": "LOBBY_WAIT",
+  "player_id": "SERVER",
+  "payload": {
+    "waiting_for": "Player_2"
+  },
+  "timestamp": 1727000001
+}
+
+{
+  "msg_type": "GAME_START",
+  "player_id": "SERVER",
+  "payload": {
+    "player_roles": {
+      "Alice": "Player_1",
+      "Bob": "Player_2"
+    },
+    "starting_player": "Player_1"
+  },
+  "timestamp": 1727000002
+}
+
 {
   "msg_type": "MOVE",
   "player_id": "Player_1",
@@ -55,14 +86,59 @@
     "row": 0,
     "col": 2
   },
-  "timestamp": 1727000000
+  "timestamp": 1727000005
+}
+
+{
+  "msg_type": "STATE_UPDATE",
+  "player_id": "SERVER",
+  "payload": {
+    "board": [
+      ["X", "-", "-"],
+      ["-", "O", "-"],
+      ["-", "-", "-"]
+    ],
+    "active_player": "Player_2"
+  },
+  "timestamp": 1727000006
+}
+
+{
+  "msg_type": "ERROR",
+  "player_id": "SERVER",
+  "payload": {
+    "error_code": "OUT_OF_TURN",
+    "error_message": "It is not your turn."
+  },
+  "timestamp": 1727000007
+}
+
+{
+  "msg_type": "DISCONNECT",
+  "player_id": "Player_1",
+  "timestamp": 1727000010
+}
+
+{
+  "msg_type": "GAME_OVER",
+  "player_id": "SERVER",
+  "payload": {
+    "result": "Player_1_Wins",
+    "final_board": [
+      ["X", "X", "X"],
+      ["O", "-", "-"],
+      ["O", "-", "-"]
+    ],
+    "winner": "Player_1"
+  },
+  "timestamp": 1727000020
 }
 ```
 
 ---
 
 ### 2.3 Game State Machine (FSM) Design (Sprint 1 Deliverable)
-- **State Transitions:** Detail state flow: `INIT` -> `WAITING_FOR_PLAYERS` -> `PLAYER_TURN` -> `EVALUATE_MOVE` -> `CHECK_WIN_DRAW` -> `GAME_OVER` -> `CLEANUP`.
+- **State Transitions:** See fsm_specifications.md
 
 ---
 
