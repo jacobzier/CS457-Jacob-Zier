@@ -6,7 +6,7 @@ config:
   themeVariables:
     fontFamily: '''Inter Variable'', sans-serif'
 ---
-stateDiagram
+stateDiagram-v2
   direction TB
   [*] --> WaitingForPlayers
   WaitingForPlayers --> GameActive:Both players joined
